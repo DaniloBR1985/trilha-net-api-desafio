@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using TrilhaApiDesafio.Context;
+using TrilhaApiDesafio.Repositories;
+using TrilhaApiDesafio.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,19 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddDbContext<OrganizadorContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ITarefaRepository, TarefaRepository>();
+builder.Services.AddScoped<ITarefaService, TarefaService>();
+
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<OrganizadorContext>();
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
